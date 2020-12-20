@@ -18,19 +18,23 @@ from projects.convai2.eval_f1 import eval_f1, setup_args as setup_args_f1
 from projects.convai2.eval_ppl import eval_ppl, setup_args as setup_args_ppl
 from projects.convai2.build_dict import build_dict
 from transformers import (OpenAIGPTDoubleHeadsModel, OpenAIGPTLMHeadModel, OpenAIGPTTokenizer,
-                                  GPT2DoubleHeadsModel, GPT2LMHeadModel, GPT2Tokenizer)
+                          GPT2DoubleHeadsModel, GPT2LMHeadModel, GPT2Tokenizer)
 
 from train import build_input_from_segments, pad_dataset, SPECIAL_TOKENS, add_special_tokens_
 from utils import download_pretrained_model, AttrDict
 from interact import sample_sequence
 
+
 class TransformerAgent(Agent):
     @staticmethod
     def add_cmdline_args(argparser):
         agent_args = argparser.add_argument_group('Agent parameters')
-        agent_args.add_argument("--model_checkpoint", type=str, default="", help="Path, url or short name of the model. Must be OpenAIGPT.")
-        agent_args.add_argument("--max_history", type=int, default=2, help="Number of previous utterances to keep in history")
-        agent_args.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device (cuda or cpu)")
+        agent_args.add_argument("--model_checkpoint", type=str, default="",
+                                help="Path, url or short name of the model. Must be OpenAIGPT.")
+        agent_args.add_argument("--max_history", type=int, default=2,
+                                help="Number of previous utterances to keep in history")
+        agent_args.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu",
+                                help="Device (cuda or cpu)")
         agent_args.add_argument("--eval_type", type=str, default="hits@1", help="hits@1, ppl or f1")
         agent_args.add_argument("--no_sample", action='store_true')
         agent_args.add_argument("--max_length", type=int, default=20)
@@ -38,7 +42,8 @@ class TransformerAgent(Agent):
         agent_args.add_argument("--seed", type=int, default=0)
         agent_args.add_argument("--temperature", type=int, default=0.7)
         agent_args.add_argument("--top_k", type=int, default=20)
-        agent_args.add_argument("--top_p", type=float, default=0.9, help="Nucleus filtering (top-p) before sampling (<=0.0: no filtering)")
+        agent_args.add_argument("--top_p", type=float, default=0.9,
+                                help="Nucleus filtering (top-p) before sampling (<=0.0: no filtering)")
         return argparser
 
     def __init__(self, opt, shared=None):
@@ -108,7 +113,7 @@ class TransformerAgent(Agent):
                 else:
                     self.history.append(self.tokenizer.encode(subtext))
 
-        self.history = self.history[-(2*self.args.max_history+1):]
+        self.history = self.history[-(2 * self.args.max_history + 1):]
 
         candidates = []
         if 'label_candidates' in observation:
@@ -143,7 +148,7 @@ class TransformerAgent(Agent):
 
             val, ind = torch.sort(mc_logits[0], descending=True)
 
-            ypred = self.candidates[ind[0].item()][1] # match
+            ypred = self.candidates[ind[0].item()][1]  # match
             tc = []
             for j in range(len(self.candidates)):
                 tc.append(self.candidates[ind[j].item()][1])
@@ -194,7 +199,7 @@ class TransformerAgent(Agent):
 
         for prefix_id, words in prefix2words.items():
             total_counts = sum(words.values())
-            prefix2words[prefix_id] = dict((word, count/total_counts) for word, count in words.items())
+            prefix2words[prefix_id] = dict((word, count / total_counts) for word, count in words.items())
 
         return prefix2words
 
